@@ -12,9 +12,13 @@ app.use(cors());
 app.use(express.json());
 
 // MongoDB Connection
-mongoose.connect(process.env.MONGODB_URI)
-  .then(() => console.log('Connected to MongoDB'))
-  .catch(err => console.error('MongoDB connection error:', err));
+if (process.env.MONGODB_URI) {
+  mongoose.connect(process.env.MONGODB_URI)
+    .then(() => console.log('Connected to MongoDB'))
+    .catch(err => console.error('MongoDB connection error:', err));
+} else {
+  console.warn('WARNING: MONGODB_URI environment variable is not set. MongoDB connection skipped.');
+}
 
 // Blog Post Schema
 const postSchema = new mongoose.Schema({
@@ -90,8 +94,11 @@ app.get('/', (req, res) => {
   res.send('Revnity Backend is running successfully!');
 });
 
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
-});
+// Only listen on a port if we are NOT in a Vercel serverless environment
+if (!process.env.VERCEL) {
+  app.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
+  });
+}
 
 export default app;
