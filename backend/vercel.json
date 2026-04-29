@@ -11,5 +11,10 @@
       "src": "/(.*)",
       "dest": "/api_wrapper.cjs"
     }
-  ]
+  ],
+  "functions": {
+    "api_wrapper.cjs": {
+      "includeFiles": "node_modules/**"
+    }
+  }
 }
