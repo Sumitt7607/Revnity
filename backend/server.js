@@ -85,6 +85,11 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', message: 'Revnity Backend is running with MongoDB' });
 });
 
+// Root Route
+app.get('/', (req, res) => {
+  res.send('Revnity Backend is running successfully!');
+});
+
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
