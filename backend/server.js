@@ -1,27 +1,27 @@
-import express from 'express';
-import cors from 'cors';
-import dotenv from 'dotenv';
-import mongoose from 'mongoose';
+const express = require('express');
+const cors = require('cors');
+const dotenv = require('dotenv');
+const mongoose = require('mongoose');
 
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 5000;
 
-app.use(cors());
+// CORS — allow requests from your frontend Vercel domain
+app.use(cors({
+  origin: '*',
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
 app.use(express.json());
 
-// MongoDB Connection
+// MongoDB Connection — safe, non-blocking
 if (process.env.MONGODB_URI) {
-  try {
-    mongoose.connect(process.env.MONGODB_URI)
-      .then(() => console.log('Connected to MongoDB'))
-      .catch(err => console.error('MongoDB connection error (async):', err));
-  } catch (error) {
-    console.error('MongoDB connection error (sync):', error);
-  }
+  mongoose.connect(process.env.MONGODB_URI)
+    .then(() => console.log('Connected to MongoDB'))
+    .catch(err => console.error('MongoDB connection error:', err));
 } else {
-  console.warn('WARNING: MONGODB_URI environment variable is not set. MongoDB connection skipped.');
+  console.warn('WARNING: MONGODB_URI is not set. MongoDB connection skipped.');
 }
 
 // Blog Post Schema
@@ -30,7 +30,7 @@ const postSchema = new mongoose.Schema({
   slug: { type: String, required: true, unique: true },
   content: { type: String, required: true },
   tag: { type: String, required: true },
-  img: { type: String, default: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?q=80&w=2426&auto=format&fit=crop" },
+  img: { type: String, default: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?q=80&w=2426&auto=format&fit=crop' },
   metaTitle: String,
   metaDesc: String,
   keywords: String,
@@ -39,7 +39,17 @@ const postSchema = new mongoose.Schema({
 
 const Post = mongoose.model('Post', postSchema);
 
-// API Routes
+// Root route
+app.get('/', (req, res) => {
+  res.send('Revnity Backend is running successfully!');
+});
+
+// Health check
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'ok', message: 'Revnity Backend is running' });
+});
+
+// Get all posts
 app.get('/api/posts', async (req, res) => {
   try {
     const posts = await Post.find().sort({ createdAt: -1 });
@@ -49,6 +59,7 @@ app.get('/api/posts', async (req, res) => {
   }
 });
 
+// Get single post by ID
 app.get('/api/posts/:id', async (req, res) => {
   try {
     const post = await Post.findById(req.params.id);
@@ -59,18 +70,18 @@ app.get('/api/posts/:id', async (req, res) => {
   }
 });
 
+// Create post
 app.post('/api/posts', async (req, res) => {
   try {
-    console.log('Received post data:', req.body);
     const newPost = new Post(req.body);
     const savedPost = await newPost.save();
     res.status(201).json(savedPost);
   } catch (error) {
-    console.error('Error creating post:', error.message);
     res.status(400).json({ message: error.message });
   }
 });
 
+// Update post
 app.put('/api/posts/:id', async (req, res) => {
   try {
     const updatedPost = await Post.findByIdAndUpdate(req.params.id, req.body, { new: true });
@@ -80,6 +91,7 @@ app.put('/api/posts/:id', async (req, res) => {
   }
 });
 
+// Delete post
 app.delete('/api/posts/:id', async (req, res) => {
   try {
     await Post.findByIdAndDelete(req.params.id);
@@ -89,20 +101,10 @@ app.delete('/api/posts/:id', async (req, res) => {
   }
 });
 
-app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', message: 'Revnity Backend is running with MongoDB' });
-});
-
-// Root Route
-app.get('/', (req, res) => {
-  res.send('Revnity Backend is running successfully!');
-});
-
-// Only listen on a port if we are NOT in a Vercel serverless environment
+// Only bind port in local dev (not on Vercel)
 if (!process.env.VERCEL) {
-  app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
-  });
+  const PORT = process.env.PORT || 5000;
+  app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
 }
 
-export default app;
+module.exports = app;
