@@ -1,0 +1,13 @@
+# Root-level gitignore (each subfolder has its own)
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
