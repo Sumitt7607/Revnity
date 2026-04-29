@@ -13,9 +13,13 @@ app.use(express.json());
 
 // MongoDB Connection
 if (process.env.MONGODB_URI) {
-  mongoose.connect(process.env.MONGODB_URI)
-    .then(() => console.log('Connected to MongoDB'))
-    .catch(err => console.error('MongoDB connection error:', err));
+  try {
+    mongoose.connect(process.env.MONGODB_URI)
+      .then(() => console.log('Connected to MongoDB'))
+      .catch(err => console.error('MongoDB connection error (async):', err));
+  } catch (error) {
+    console.error('MongoDB connection error (sync):', error);
+  }
 } else {
   console.warn('WARNING: MONGODB_URI environment variable is not set. MongoDB connection skipped.');
 }
